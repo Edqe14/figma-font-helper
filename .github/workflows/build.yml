@@ -1,0 +1,52 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*" # Trigger on version tags
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v1
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build for multiple platforms
+        run: |
+          bun build index.ts --compile --target=bun-linux-x64 --output=dist/figma-font-helper-linux-x64
+          bun build index.ts --compile --target=bun-linux-arm64 --output=dist/figma-font-helper-linux-arm64
+          bun build index.ts --compile --target=bun-windows-x64 --output=dist/figma-font-helper-win-x64.exe
+          bun build index.ts --compile --target=bun-darwin-arm64 --output=dist/figma-font-helper-macos-arm64
+          bun build index.ts --compile --target=bun-darwin-x64 --output=dist/figma-font-helper-macos-x64
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: built-executables
+          path: dist/
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/figma-font-helper-linux-x64
+            dist/figma-font-helper-linux-arm64
+            dist/figma-font-helper-win-x64.exe
+            dist/figma-font-helper-macos-arm64
+            dist/figma-font-helper-macos-x64
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
