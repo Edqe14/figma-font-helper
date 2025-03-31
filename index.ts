@@ -18,10 +18,8 @@ const flags = process.argv
       };
     },
     {
-      directory: process.cwd(), // default value
       port: 44950, // default value
     } as {
-      directory: string;
       port: number;
       [key: string]: string | number | undefined | null;
     }
